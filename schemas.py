@@ -1,33 +1,43 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Literal
 from datetime import datetime, timezone
 from functools import partial
+from enum import Enum
+from typing import Optional
 
 
-class TodoListBase(BaseModel):
+class TaskStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    INPROGRESS = "in_progress"
+
+
+class TodoListCreate(BaseModel):
     name: str = Field(min_length=2, max_length=50)
 
 
-class TodoListResponse(TodoListBase):
+class TodoListResponse(TodoListCreate):
     id: int
-    model_config = ConfigDict(from_attributes=True)
+
+    # model_config = ConfigDict(from_attributes=True)
 
 
-class TodoTaskBase(BaseModel):
+class TodoTaskCreate(BaseModel):
     title: str = Field(min_length=2, max_length=50)
     description: str | None = None
-    status: Literal["pending", "completed"] = "pending"
-
-
-class TodoTaskCreate(TodoTaskBase):
     list_id: int
 
 
-class TodoTaskResponse(TodoTaskBase):
+class TodoTaskResponse(TodoTaskCreate):
     id: int
-    list_id: int
+    status: TaskStatus = TaskStatus.PENDING
     createAt: datetime = Field(
         default_factory=partial(datetime.now, timezone.utc), frozen=True
     )
 
-    model_config = ConfigDict(from_attributes=True)
+    # model_config = ConfigDict(from_attributes=True)
+
+
+class TodoTaskUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=2, max_length=50)
+    status: Optional[TaskStatus] = None
+    description: Optional[str] = None
